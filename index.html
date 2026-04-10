@@ -169,46 +169,19 @@ padding-left: 2px;
 padding-right: 2px;
 }
 
-/* ── COLOR DRUM (horizontal) ── */
+/* ── COLOR SELECTOR ── */
 #color-drum {
-width: 200px;
-height: 40px;
+width: 44px;
+height: 44px;
 overflow: hidden;
 position: relative;
 cursor: pointer;
-border-radius: 20px;
+border-radius: 50%;
+border: 1px solid rgba(255,255,255,0.2);
 box-shadow:
-0 0 18px 4px rgba(var(–c1), 0.18),
-0 0 40px 8px rgba(var(–c1), 0.08);
-}
-
-#color-drum::after {
-content: ‘’;
-position: absolute;
-inset: 0;
-border-radius: 20px;
-box-shadow:
-inset 0 3px 8px rgba(255,255,255,0.06),
-inset 0 -3px 8px rgba(255,255,255,0.03),
-inset 4px 0 10px rgba(255,255,255,0.04),
-inset -4px 0 10px rgba(255,255,255,0.04);
-z-index: 3;
-pointer-events: none;
-}
-
-#color-drum::before {
-content: ‘’;
-position: absolute;
-inset: 0;
-border-radius: 20px;
-background: linear-gradient(to right,
-rgba(255,255,255,0.12) 0%,
-transparent 25%,
-transparent 75%,
-rgba(255,255,255,0.12) 100%
-);
-z-index: 4;
-pointer-events: none;
+0 0 12px 2px rgba(var(–c1), 0.15),
+inset 0 1px 4px rgba(255,255,255,0.08);
+flex-shrink: 0;
 }
 
 #color-drum-inner {
@@ -218,11 +191,12 @@ align-items: center;
 height: 100%;
 position: relative;
 z-index: 1;
+transition: transform 0.18s cubic-bezier(0.25,0.8,0.25,1);
 }
 
 .color-item {
-width: 40px;
-height: 40px;
+width: 44px;
+height: 44px;
 flex-shrink: 0;
 display: flex;
 align-items: center;
@@ -230,17 +204,9 @@ justify-content: center;
 }
 
 .color-dot {
-width: 18px;
-height: 18px;
+width: 26px;
+height: 26px;
 border-radius: 50%;
-border: 2px solid transparent;
-transition: transform 0.15s, border-color 0.15s, width 0.15s, height 0.15s;
-}
-
-.color-item.active .color-dot {
-width: 24px;
-height: 24px;
-border-color: rgba(255,255,255,0.7);
 }
 
 /* ── START BUTTON ── */
@@ -549,8 +515,8 @@ const PALETTES = [
 let currentPalette = 0;
 
 // Build color drum
-const COLOR_ITEM_W = 40;
-const COLOR_DRUM_W = 200;
+const COLOR_ITEM_W = 44;
+const COLOR_DRUM_W = 44; // window = 1 item wide, others hidden
 const colorDrumInner = document.getElementById('color-drum-inner');
 const colorDotStyles = [
   'radial-gradient(circle at 35% 35%, #ff9500, #cc2200)',
