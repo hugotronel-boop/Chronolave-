@@ -21,12 +21,15 @@ font-family: ‘DM Mono’, monospace;
 color: #fff;
 user-select: none;
 -webkit-user-select: none;
-touch-action: none;
 }
 
 #app {
 position: fixed;
 inset: 0;
+width: 100%;
+height: 100%;
+/* fix for iOS Safari 100vh bug */
+height: -webkit-fill-available;
 display: flex;
 flex-direction: column;
 align-items: center;
@@ -166,26 +169,79 @@ padding-left: 2px;
 padding-right: 2px;
 }
 
-/* ── COLOR SWATCHES ── */
-#color-row {
-display: flex;
-gap: 14px;
-align-items: center;
+/* ── COLOR DRUM (horizontal) ── */
+#color-drum {
+width: 200px;
+height: 40px;
+overflow: hidden;
+position: relative;
+cursor: pointer;
+border-radius: 20px;
+box-shadow:
+0 0 18px 4px rgba(var(–c1), 0.18),
+0 0 40px 8px rgba(var(–c1), 0.08);
 }
 
-.swatch {
-width: 22px; height: 22px;
+#color-drum::after {
+content: ‘’;
+position: absolute;
+inset: 0;
+border-radius: 20px;
+box-shadow:
+inset 0 3px 8px rgba(255,255,255,0.06),
+inset 0 -3px 8px rgba(255,255,255,0.03),
+inset 4px 0 10px rgba(255,255,255,0.04),
+inset -4px 0 10px rgba(255,255,255,0.04);
+z-index: 3;
+pointer-events: none;
+}
+
+#color-drum::before {
+content: ‘’;
+position: absolute;
+inset: 0;
+border-radius: 20px;
+background: linear-gradient(to right,
+rgba(255,255,255,0.12) 0%,
+transparent 25%,
+transparent 75%,
+rgba(255,255,255,0.12) 100%
+);
+z-index: 4;
+pointer-events: none;
+}
+
+#color-drum-inner {
+display: flex;
+flex-direction: row;
+align-items: center;
+height: 100%;
+position: relative;
+z-index: 1;
+}
+
+.color-item {
+width: 40px;
+height: 40px;
+flex-shrink: 0;
+display: flex;
+align-items: center;
+justify-content: center;
+}
+
+.color-dot {
+width: 18px;
+height: 18px;
 border-radius: 50%;
 border: 2px solid transparent;
-cursor: pointer;
-transition: transform 0.15s, border-color 0.15s;
-box-shadow: 0 0 8px 1px rgba(0,0,0,0.4);
+transition: transform 0.15s, border-color 0.15s, width 0.15s, height 0.15s;
 }
-.swatch.active {
+
+.color-item.active .color-dot {
+width: 24px;
+height: 24px;
 border-color: rgba(255,255,255,0.7);
-transform: scale(1.25);
 }
-.swatch:active { transform: scale(1.1); }
 
 /* ── START BUTTON ── */
 #btn-start {
@@ -308,13 +364,8 @@ cursor: pointer;
         <label>sec</label>
       </div>
     </div>
-    <div id="color-row">
-      <div class="swatch active" data-palette="0" style="background: radial-gradient(circle at 35% 35%, #ff9500, #cc2200);"></div>
-      <div class="swatch" data-palette="1" style="background: radial-gradient(circle at 35% 35%, #cc44ff, #4400aa);"></div>
-      <div class="swatch" data-palette="2" style="background: radial-gradient(circle at 35% 35%, #00cfff, #003899);"></div>
-      <div class="swatch" data-palette="3" style="background: radial-gradient(circle at 35% 35%, #00ff99, #006633);"></div>
-      <div class="swatch" data-palette="4" style="background: radial-gradient(circle at 35% 35%, #ffe566, #cc8800);"></div>
-      <div class="swatch" data-palette="5" style="background: radial-gradient(circle at 35% 35%, #ffffff, #556677);"></div>
+    <div id="color-drum">
+      <div id="color-drum-inner"></div>
     </div>
     <button id="btn-start">▶</button>
   </div>
@@ -497,15 +548,77 @@ const PALETTES = [
 
 let currentPalette = 0;
 
-document.querySelectorAll('.swatch').forEach(sw => {
-  sw.addEventListener('click', () => {
-    document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
-    sw.classList.add('active');
-    currentPalette = parseInt(sw.dataset.palette);
-    // update glow color to match
-    updateGlowColor();
-  });
+// Build color drum
+const COLOR_ITEM_W = 40;
+const COLOR_DRUM_W = 200;
+const colorDrumInner = document.getElementById('color-drum-inner');
+const colorDotStyles = [
+  'radial-gradient(circle at 35% 35%, #ff9500, #cc2200)',
+  'radial-gradient(circle at 35% 35%, #cc44ff, #4400aa)',
+  'radial-gradient(circle at 35% 35%, #00cfff, #003899)',
+  'radial-gradient(circle at 35% 35%, #00ff99, #006633)',
+  'radial-gradient(circle at 35% 35%, #ffe566, #cc8800)',
+  'radial-gradient(circle at 35% 35%, #ffffff, #556677)',
+];
+const colorItems = colorDotStyles.map((bg, i) => {
+  const item = document.createElement('div');
+  item.className = 'color-item' + (i === 0 ? ' active' : '');
+  const dot = document.createElement('div');
+  dot.className = 'color-dot';
+  dot.style.background = bg;
+  item.appendChild(dot);
+  colorDrumInner.appendChild(item);
+  return item;
 });
+
+function updateColorDrum(idx) {
+  const offset = (COLOR_DRUM_W / 2) - (idx * COLOR_ITEM_W + COLOR_ITEM_W / 2);
+  colorDrumInner.style.transition = 'transform 0.18s cubic-bezier(0.25,0.8,0.25,1)';
+  colorDrumInner.style.transform = `translateX(${offset}px)`;
+  colorItems.forEach((it, i) => it.classList.toggle('active', i === idx));
+}
+updateColorDrum(currentPalette);
+
+// Interaction
+const colorDrumEl = document.getElementById('color-drum');
+let cdStartX = 0, cdStartIdx = 0, cdDragging = false;
+function cdClamp(v) { return Math.max(0, Math.min(PALETTES.length - 1, v)); }
+
+colorDrumEl.addEventListener('touchstart', e => {
+  cdStartX   = e.touches[0].clientX;
+  cdStartIdx = currentPalette;
+  cdDragging = true;
+  colorDrumInner.style.transition = 'none';
+}, {passive: true});
+
+colorDrumEl.addEventListener('touchmove', e => {
+  if (!cdDragging) return;
+  const dx = e.touches[0].clientX - cdStartX;
+  const base = (COLOR_DRUM_W / 2) - (cdStartIdx * COLOR_ITEM_W + COLOR_ITEM_W / 2);
+  colorDrumInner.style.transform = `translateX(${base + dx}px)`;
+  const newIdx = cdClamp(cdStartIdx - Math.round(dx / COLOR_ITEM_W));
+  if (newIdx !== currentPalette) {
+    currentPalette = newIdx;
+    if (navigator.vibrate) navigator.vibrate(10);
+    colorItems.forEach((it, i) => it.classList.toggle('active', i === newIdx));
+    updateGlowColor();
+  }
+}, {passive: true});
+
+colorDrumEl.addEventListener('touchend', () => {
+  cdDragging = false;
+  updateColorDrum(currentPalette);
+});
+
+colorDrumEl.addEventListener('wheel', e => {
+  e.preventDefault();
+  const newIdx = cdClamp(currentPalette + (e.deltaY > 0 ? 1 : -1));
+  if (newIdx !== currentPalette) {
+    currentPalette = newIdx;
+    updateColorDrum(currentPalette);
+    updateGlowColor();
+  }
+}, {passive: false});
 
 let glowColor = '255,140,0';
 function updateGlowColor() {
