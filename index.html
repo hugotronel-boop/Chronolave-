@@ -26,10 +26,6 @@ user-select: none;
 #app {
 position: fixed;
 inset: 0;
-width: 100%;
-height: 100%;
-/* fix for iOS Safari 100vh bug */
-height: -webkit-fill-available;
 display: flex;
 flex-direction: column;
 align-items: center;
@@ -38,16 +34,53 @@ justify-content: center;
 
 #canvas {
 position: fixed;
-inset: 0;
-width: 100%;
-height: 100%;
+top: 0; left: 0;
+width: 100%; height: 100%;
+}
+
+:root {
+–c1: 255, 140, 0;
+–c2: 180, 10, 0;
+}
+
+/* ── MODE TOGGLE ── */
+#mode-toggle {
+position: fixed;
+top: calc(env(safe-area-inset-top, 16px) + 16px);
+left: 50%;
+transform: translateX(-50%);
+z-index: 20;
+display: flex;
+background: rgba(255,255,255,0.05);
+border: 1px solid rgba(255,255,255,0.1);
+border-radius: 30px;
+padding: 3px;
+gap: 2px;
+}
+
+.mode-btn {
+font-family: ‘DM Mono’, monospace;
+font-size: 9px;
+letter-spacing: 0.25em;
+text-transform: uppercase;
+color: rgba(255,255,255,0.3);
+background: none;
+border: none;
+padding: 7px 16px;
+border-radius: 24px;
+cursor: pointer;
+transition: color 0.2s, background 0.2s;
+}
+
+.mode-btn.active {
+color: #fff;
+background: rgba(var(–c1), 0.18);
 }
 
 /* ── SETUP ── */
 #setup {
 position: fixed;
-bottom: 0;
-left: 0; right: 0;
+bottom: 0; left: 0; right: 0;
 z-index: 10;
 display: flex;
 flex-direction: column;
@@ -55,14 +88,6 @@ align-items: center;
 gap: 28px;
 padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 36px);
 padding-top: 28px;
-}
-
-#setup h1 {
-font-size: 11px;
-letter-spacing: 0.35em;
-text-transform: uppercase;
-color: rgba(255,255,255,0.3);
-font-weight: 300;
 }
 
 .picker-row {
@@ -85,15 +110,8 @@ color: rgba(255,255,255,0.2);
 text-transform: uppercase;
 }
 
-:root {
-–c1: 255, 140, 0;   /* top/surface color - RGB */
-–c2: 180, 10, 0;    /* deep color - RGB */
-}
-
-/* Drum — creux effect */
 .drum {
-width: 80px;
-height: 130px;
+width: 80px; height: 130px;
 overflow: hidden;
 position: relative;
 cursor: pointer;
@@ -103,7 +121,6 @@ box-shadow:
 0 0 40px 8px rgba(var(–c1), 0.08);
 }
 
-/* inset shadow = creux depth */
 .drum::after {
 content: ‘’;
 position: absolute;
@@ -114,24 +131,18 @@ inset 0 4px 10px rgba(255,255,255,0.06),
 inset 0 -4px 10px rgba(255,255,255,0.03),
 inset 3px 0 8px rgba(255,255,255,0.03),
 inset -3px 0 8px rgba(255,255,255,0.03);
-z-index: 3;
-pointer-events: none;
+z-index: 3; pointer-events: none;
 }
 
-/* top/bottom fade */
 .drum::before {
 content: ‘’;
 position: absolute;
 inset: 0;
 border-radius: 14px;
 background: linear-gradient(to bottom,
-rgba(255,255,255,0.12) 0%,
-transparent 28%,
-transparent 72%,
-rgba(255,255,255,0.12) 100%
-);
-z-index: 4;
-pointer-events: none;
+rgba(255,255,255,0.12) 0%, transparent 28%,
+transparent 72%, rgba(255,255,255,0.12) 100%);
+z-index: 4; pointer-events: none;
 }
 
 .drum-inner {
@@ -143,8 +154,7 @@ z-index: 1;
 }
 
 .drum-item {
-height: 44px;
-width: 80px;
+height: 44px; width: 80px;
 display: flex;
 align-items: center;
 justify-content: center;
@@ -152,7 +162,6 @@ font-size: 24px;
 font-weight: 300;
 color: rgba(255,255,255,0.15);
 transition: color 0.15s, font-size 0.15s;
-user-select: none;
 }
 
 .drum-item.active {
@@ -165,21 +174,28 @@ text-shadow: 0 0 20px rgba(var(–c1), 0.6);
 font-size: 24px;
 color: rgba(255,255,255,0.2);
 padding-bottom: 52px;
-padding-left: 2px;
-padding-right: 2px;
+padding-left: 2px; padding-right: 2px;
 }
 
-/* ── COLOR SELECTOR ── */
+/* chrono hint */
+#chrono-hint {
+font-size: 10px;
+letter-spacing: 0.35em;
+text-transform: uppercase;
+color: rgba(255,255,255,0.2);
+display: none;
+margin-bottom: 8px;
+}
+
+/* color drum */
 #color-drum {
-width: 44px;
-height: 44px;
+width: 44px; height: 44px;
 overflow: hidden;
 position: relative;
 cursor: pointer;
 border-radius: 50%;
 border: 1px solid rgba(255,255,255,0.2);
-box-shadow:
-0 0 12px 2px rgba(var(–c1), 0.15),
+box-shadow: 0 0 12px 2px rgba(var(–c1), 0.15),
 inset 0 1px 4px rgba(255,255,255,0.08);
 flex-shrink: 0;
 }
@@ -189,27 +205,19 @@ display: flex;
 flex-direction: row;
 align-items: center;
 height: 100%;
-position: relative;
-z-index: 1;
+position: relative; z-index: 1;
 transition: transform 0.18s cubic-bezier(0.25,0.8,0.25,1);
 }
 
 .color-item {
-width: 44px;
-height: 44px;
+width: 44px; height: 44px;
 flex-shrink: 0;
-display: flex;
-align-items: center;
-justify-content: center;
+display: flex; align-items: center; justify-content: center;
 }
 
-.color-dot {
-width: 26px;
-height: 26px;
-border-radius: 50%;
-}
+.color-dot { width: 26px; height: 26px; border-radius: 50%; }
 
-/* ── START BUTTON ── */
+/* start button */
 #btn-start {
 width: 64px; height: 64px;
 border-radius: 50%;
@@ -230,58 +238,41 @@ box-shadow: 0 0 24px 6px rgba(var(–c1), 0.3);
 
 /* ── RUNNING ── */
 #running {
-position: relative;
-z-index: 10;
-display: none;
-flex-direction: column;
-align-items: center;
+position: relative; z-index: 10;
+display: none; flex-direction: column; align-items: center;
 }
 
 #time-display {
-font-size: 68px;
-font-weight: 300;
-letter-spacing: -0.02em;
-line-height: 1;
+font-size: 68px; font-weight: 300;
+letter-spacing: -0.02em; line-height: 1;
 text-shadow: 0 0 40px rgba(var(–c1), 0.4);
 }
 
 #time-label {
-font-size: 10px;
-letter-spacing: 0.35em;
+font-size: 10px; letter-spacing: 0.35em;
 color: rgba(255,255,255,0.25);
-text-transform: uppercase;
-margin-top: 10px;
+text-transform: uppercase; margin-top: 10px;
 }
 
 #btn-stop {
 margin-top: 52px;
-background: none;
-border: none;
+background: none; border: none;
 color: rgba(255,255,255,0.2);
 font-family: ‘DM Mono’, monospace;
-font-size: 10px;
-letter-spacing: 0.3em;
-text-transform: uppercase;
-cursor: pointer;
-padding: 12px;
+font-size: 10px; letter-spacing: 0.3em;
+text-transform: uppercase; cursor: pointer; padding: 12px;
 }
 #btn-stop:active { color: rgba(255,255,255,0.7); }
 
 /* ── DONE ── */
 #done {
-position: relative;
-z-index: 10;
-display: none;
-flex-direction: column;
-align-items: center;
-gap: 24px;
+position: relative; z-index: 10;
+display: none; flex-direction: column; align-items: center; gap: 24px;
 }
 
 #done-text {
-font-size: 11px;
-letter-spacing: 0.4em;
-text-transform: uppercase;
-color: rgba(255,255,255,0.5);
+font-size: 11px; letter-spacing: 0.4em;
+text-transform: uppercase; color: rgba(255,255,255,0.5);
 }
 
 #btn-reset {
@@ -289,12 +280,9 @@ background: none;
 border: 1px solid rgba(255,255,255,0.15);
 color: rgba(255,255,255,0.4);
 font-family: ‘DM Mono’, monospace;
-font-size: 10px;
-letter-spacing: 0.3em;
+font-size: 10px; letter-spacing: 0.3em;
 text-transform: uppercase;
-padding: 14px 28px;
-border-radius: 40px;
-cursor: pointer;
+padding: 14px 28px; border-radius: 40px; cursor: pointer;
 }
 </style>
 
@@ -304,47 +292,40 @@ cursor: pointer;
 
 <div id="app">
 
-  <!-- SETUP -->
-
-  <div id="setup">
-    <h1>Durée</h1>
-    <div class="picker-row">
-      <div class="picker">
-        <div class="drum" id="drum-h">
-          <div class="drum-inner" id="inner-h"></div>
-        </div>
-        <label>h</label>
-      </div>
-      <div class="sep">:</div>
-      <div class="picker">
-        <div class="drum" id="drum-m">
-          <div class="drum-inner" id="inner-m"></div>
-        </div>
-        <label>min</label>
-      </div>
-      <div class="sep">:</div>
-      <div class="picker">
-        <div class="drum" id="drum-s">
-          <div class="drum-inner" id="inner-s"></div>
-        </div>
-        <label>sec</label>
-      </div>
-    </div>
-    <div id="color-drum">
-      <div id="color-drum-inner"></div>
-    </div>
-    <button id="btn-start">▶</button>
+  <div id="mode-toggle">
+    <button class="mode-btn active" id="btn-mode-timer">minuteur</button>
+    <button class="mode-btn"        id="btn-mode-chrono">chrono</button>
   </div>
 
-  <!-- RUNNING -->
+  <div id="setup">
+    <div id="timer-pickers">
+      <div class="picker-row">
+        <div class="picker">
+          <div class="drum" id="drum-h"><div class="drum-inner" id="inner-h"></div></div>
+          <label>h</label>
+        </div>
+        <div class="sep">:</div>
+        <div class="picker">
+          <div class="drum" id="drum-m"><div class="drum-inner" id="inner-m"></div></div>
+          <label>min</label>
+        </div>
+        <div class="sep">:</div>
+        <div class="picker">
+          <div class="drum" id="drum-s"><div class="drum-inner" id="inner-s"></div></div>
+          <label>sec</label>
+        </div>
+      </div>
+    </div>
+    <div id="chrono-hint">prêt à démarrer</div>
+    <div id="color-drum"><div id="color-drum-inner"></div></div>
+    <button id="btn-start">▶</button>
+  </div>
 
   <div id="running">
     <div id="time-display">00:00</div>
     <div id="time-label">restant</div>
-    <button id="btn-stop">annuler</button>
+    <button id="btn-stop">arrêter</button>
   </div>
-
-  <!-- DONE -->
 
   <div id="done">
     <div id="done-text">terminé</div>
@@ -352,383 +333,373 @@ cursor: pointer;
   </div>
 
 </div>
-
 <script>
-// ─── DRUM PICKERS ────────────────────────────────────────────────
-const ITEM_H = 44;
-const DRUM_H = 130;
+// ─── MODE ────────────────────────────────────────────────────────
+let appMode = 'timer';
+
+const btnModeTimer  = document.getElementById(‘btn-mode-timer’);
+const btnModeChrono = document.getElementById(‘btn-mode-chrono’);
+const timerPickers  = document.getElementById(‘timer-pickers’);
+const chronoHint    = document.getElementById(‘chrono-hint’);
+const timeLabel     = document.getElementById(‘time-label’);
+
+function setMode(m) {
+if (running) return; // don’t switch mid-run
+appMode = m;
+btnModeTimer.classList.toggle(‘active’, m === ‘timer’);
+btnModeChrono.classList.toggle(‘active’, m === ‘chrono’);
+timerPickers.style.display = m === ‘timer’ ? ‘’ : ‘none’;
+chronoHint.style.display   = m === ‘chrono’ ? ‘block’ : ‘none’;
+}
+
+btnModeTimer.addEventListener(‘click’,  () => setMode(‘timer’));
+btnModeChrono.addEventListener(‘click’, () => setMode(‘chrono’));
+
+// ─── DRUMS ───────────────────────────────────────────────────────
+const ITEM_H = 44, DRUM_H = 130;
 
 function buildDrum(innerId, count, pad) {
-  const inner = document.getElementById(innerId);
-  const items = [];
-  for (let i = 0; i < count; i++) {
-    const d = document.createElement('div');
-    d.className = 'drum-item';
-    d.textContent = pad ? String(i).padStart(2,'0') : i;
-    inner.appendChild(d);
-    items.push(d);
-  }
-  return items;
+const inner = document.getElementById(innerId);
+const items = [];
+for (let i = 0; i < count; i++) {
+const d = document.createElement(‘div’);
+d.className = ‘drum-item’;
+d.textContent = pad ? String(i).padStart(2,‘0’) : i;
+inner.appendChild(d);
+items.push(d);
+}
+return items;
 }
 
-const hItems = buildDrum('inner-h', 24, false); // 0–23
-const mItems = buildDrum('inner-m', 60, true);  // 00–59
-const sItems = buildDrum('inner-s', 60, true);  // 00–59
-
+const hItems = buildDrum(‘inner-h’, 24, false);
+const mItems = buildDrum(‘inner-m’, 60, true);
+const sItems = buildDrum(‘inner-s’, 60, true);
 let selH = 0, selM = 0, selS = 0;
 
-function updateDrum(innerEl, items, selIdx) {
-  const offset = (DRUM_H / 2) - (selIdx * ITEM_H + ITEM_H / 2);
-  innerEl.style.transition = 'transform 0.18s cubic-bezier(0.25,0.8,0.25,1)';
-  innerEl.style.transform = `translateY(${offset}px)`;
-  items.forEach((it, i) => it.classList.toggle('active', i === selIdx));
+function updateDrum(innerEl, items, idx) {
+const offset = (DRUM_H/2) - (idx * ITEM_H + ITEM_H/2);
+innerEl.style.transition = ‘transform 0.18s cubic-bezier(0.25,0.8,0.25,1)’;
+innerEl.style.transform = `translateY(${offset}px)`;
+items.forEach((it, i) => it.classList.toggle(‘active’, i === idx));
 }
 
-updateDrum(document.getElementById('inner-h'), hItems, selH);
-updateDrum(document.getElementById('inner-m'), mItems, selM);
-updateDrum(document.getElementById('inner-s'), sItems, selS);
+updateDrum(document.getElementById(‘inner-h’), hItems, 0);
+updateDrum(document.getElementById(‘inner-m’), mItems, 0);
+updateDrum(document.getElementById(‘inner-s’), sItems, 0);
 
-function addDrumInteraction(drumId, innerId, items, getCur, setCur, max) {
-  const drumEl  = document.getElementById(drumId);
-  const innerEl = document.getElementById(innerId);
-  let startY = 0, startIdx = 0, dragging = false;
-  function clamp(v) { return Math.max(0, Math.min(max, v)); }
+function addDrum(drumId, innerId, items, getV, setV, max) {
+const drumEl  = document.getElementById(drumId);
+const innerEl = document.getElementById(innerId);
+let startY = 0, startIdx = 0, dragging = false;
+const clamp = v => Math.max(0, Math.min(max, v));
 
-  drumEl.addEventListener('touchstart', e => {
-    startY   = e.touches[0].clientY;
-    startIdx = getCur();
-    dragging = true;
-    innerEl.style.transition = 'none';
-  }, {passive: true});
+drumEl.addEventListener(‘touchstart’, e => {
+startY = e.touches[0].clientY; startIdx = getV(); dragging = true;
+innerEl.style.transition = ‘none’;
+}, {passive:true});
 
-  drumEl.addEventListener('touchmove', e => {
-    if (!dragging) return;
-    const dy = e.touches[0].clientY - startY;
-    const baseOffset = (DRUM_H / 2) - (startIdx * ITEM_H + ITEM_H / 2);
-    innerEl.style.transform = `translateY(${baseOffset + dy}px)`;
-    const delta  = -Math.round(dy / ITEM_H);
-    const newIdx = clamp(startIdx + delta);
-    if (newIdx !== getCur()) {
-      setCur(newIdx);
-      if (navigator.vibrate) navigator.vibrate(10);
-      items.forEach((it, i) => it.classList.toggle('active', i === newIdx));
-    }
-  }, {passive: true});
+drumEl.addEventListener(‘touchmove’, e => {
+if (!dragging) return;
+const dy = e.touches[0].clientY - startY;
+innerEl.style.transform = `translateY(${(DRUM_H/2)-(startIdx*ITEM_H+ITEM_H/2)+dy}px)`;
+const newIdx = clamp(startIdx - Math.round(dy / ITEM_H));
+if (newIdx !== getV()) {
+setV(newIdx);
+if (navigator.vibrate) navigator.vibrate(10);
+items.forEach((it,i) => it.classList.toggle(‘active’, i === newIdx));
+}
+}, {passive:true});
 
-  drumEl.addEventListener('touchend', () => {
-    dragging = false;
-    updateDrum(innerEl, items, getCur());
-  });
-
-  drumEl.addEventListener('wheel', e => {
-    e.preventDefault();
-    const newIdx = clamp(getCur() + (e.deltaY > 0 ? 1 : -1));
-    if (newIdx !== getCur()) if (navigator.vibrate) navigator.vibrate(10);
-    setCur(newIdx);
-    updateDrum(innerEl, items, newIdx);
-  }, {passive: false});
+drumEl.addEventListener(‘touchend’, () => { dragging=false; updateDrum(innerEl,items,getV()); });
+drumEl.addEventListener(‘wheel’, e => {
+e.preventDefault();
+const newIdx = clamp(getV()+(e.deltaY>0?1:-1));
+setV(newIdx); updateDrum(innerEl,items,newIdx);
+}, {passive:false});
 }
 
-addDrumInteraction('drum-h', 'inner-h', hItems, () => selH, v => { selH = v; }, 23);
-addDrumInteraction('drum-m', 'inner-m', mItems, () => selM, v => { selM = v; }, 59);
-addDrumInteraction('drum-s', 'inner-s', sItems, () => selS, v => { selS = v; }, 59);
+addDrum(‘drum-h’,‘inner-h’,hItems,()=>selH,v=>{selH=v;},23);
+addDrum(‘drum-m’,‘inner-m’,mItems,()=>selM,v=>{selM=v;},59);
+addDrum(‘drum-s’,‘inner-s’,sItems,()=>selS,v=>{selS=v;},59);
 
-// ─── METABALL LAVA + BLOBS ───────────────────────────────────────
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
-
+// ─── CANVAS ──────────────────────────────────────────────────────
+const canvas = document.getElementById(‘canvas’);
+const ctx = canvas.getContext(‘2d’);
 const OFF_SCALE = 3;
 let offscreen, octx, OW, OH, W, H;
 
 function resize() {
-  W = canvas.width = window.innerWidth;
-  H = canvas.height = window.innerHeight;
-  OW = Math.ceil(W / OFF_SCALE);
-  OH = Math.ceil(H / OFF_SCALE);
-  offscreen = document.createElement('canvas');
-  offscreen.width = OW;
-  offscreen.height = OH;
-  octx = offscreen.getContext('2d');
+W = canvas.width  = window.innerWidth;
+H = canvas.height = window.innerHeight;
+OW = Math.ceil(W / OFF_SCALE);
+OH = Math.ceil(H / OFF_SCALE);
+offscreen = document.createElement(‘canvas’);
+offscreen.width = OW; offscreen.height = OH;
+octx = offscreen.getContext(‘2d’);
 }
 resize();
-window.addEventListener('resize', resize);
+window.addEventListener(‘resize’, resize);
 
 let lavaLevel = 1.0;
 let blobs = [];
 let running = false;
-let totalTime = 0;
-let remaining = 0;
+let totalTime = 0, remaining = 0, chronoElapsed = 0;
 let startTs = null;
 
+// ─── BLOB ────────────────────────────────────────────────────────
 class Blob {
-  constructor() {
-    this.r = (W * (0.07 + Math.random() * 0.1)) / OFF_SCALE;
-    this.x = OW * (0.1 + Math.random() * 0.8);
-    this.surfaceY = this.getSurface();
-    this.y = this.surfaceY;
-    this.speed = 0.3 + Math.random() * 0.5;
-    this.wobble = Math.random() * Math.PI * 2;
-    this.wobbleSpeed = 0.015 + Math.random() * 0.02;
-    this.attached = true;
-    this.detachY = this.surfaceY - this.r * 1.6;
+constructor(mode) {
+this.mode = mode;
+this.r = (W * (0.07 + Math.random() * 0.1)) / OFF_SCALE;
+this.x = OW * (0.1 + Math.random() * 0.8);
+this.speed = 0.3 + Math.random() * 0.5;
+this.wobble = Math.random() * Math.PI * 2;
+this.wobbleSpeed = 0.015 + Math.random() * 0.02;
+
+```
+if (mode === 'chrono') {
+  // Start at bottom, no lava surface needed
+  this.y = OH + this.r;
+  this.attached = false;
+} else {
+  this.surfaceY = OH * (1 - lavaLevel * 0.33);
+  this.y = this.surfaceY;
+  this.attached = true;
+  this.detachY = this.surfaceY - this.r * 1.6;
+}
+```
+
+}
+
+update() {
+this.wobble += this.wobbleSpeed;
+this.x += Math.sin(this.wobble) * 0.4;
+this.x = Math.max(this.r, Math.min(OW - this.r, this.x));
+
+```
+if (this.mode === 'chrono') {
+  this.y -= this.speed;
+} else {
+  this.surfaceY = OH * (1 - lavaLevel * 0.33);
+  if (this.attached) {
+    this.y -= this.speed * 0.4;
+    if (this.y < this.detachY) this.attached = false;
+  } else {
+    this.y -= this.speed;
   }
-  getSurface() {
-    return OH * (1 - lavaLevel * 0.33);
-  }
-  update() {
-    this.wobble += this.wobbleSpeed;
-    this.x += Math.sin(this.wobble) * 0.4;
-    this.x = Math.max(this.r, Math.min(OW - this.r, this.x));
-    this.surfaceY = this.getSurface();
-    if (this.attached) {
-      this.y -= this.speed * 0.4;
-      if (this.y < this.detachY) this.attached = false;
-    } else {
-      this.y -= this.speed;
-    }
-    return this.y + this.r > 0;
-  }
+}
+return this.y + this.r > 0;
+```
+
+}
 }
 
 let lastSpawn = 0;
 function spawnBlob(now) {
-  if (!running) return;
-  const interval = 1800 + Math.random() * 1400;
-  if (now - lastSpawn > interval) {
-    blobs.push(new Blob());
-    lastSpawn = now;
-  }
+if (!running) return;
+const interval = appMode === ‘chrono’
+? 800 + Math.random() * 700
+: 1800 + Math.random() * 1400;
+if (now - lastSpawn > interval) {
+blobs.push(new Blob(appMode));
+lastSpawn = now;
+}
 }
 
 // ─── PALETTES ────────────────────────────────────────────────────
-// Each palette: [surface top, surface bottom] as RGB arrays
-// getLavaColor interpolates top→bottom by vertical position
 const PALETTES = [
-  { top: [255, 140, 0],  bot: [180, 10,  0]  }, // 🔴 rouge/orange
-  { top: [200, 60, 255], bot: [60,  0,  140] }, // 🟣 violet
-  { top: [0,  200, 255], bot: [0,   30, 160] }, // 🔵 bleu/cyan
-  { top: [0,  255, 140], bot: [0,   80,  40] }, // 🟢 vert
-  { top: [255, 230, 50], bot: [180, 100,  0] }, // 🟡 or
-  { top: [220, 230, 255],bot: [60,  80, 110] }, // ⚪ lunaire
+{ top:[255,140,0],   bot:[180,10,0]   },
+{ top:[200,60,255],  bot:[60,0,140]   },
+{ top:[0,200,255],   bot:[0,30,160]   },
+{ top:[0,255,140],   bot:[0,80,40]    },
+{ top:[255,230,50],  bot:[180,100,0]  },
+{ top:[220,230,255], bot:[60,80,110]  },
 ];
-
 let currentPalette = 0;
 
-// Build color drum
-const COLOR_ITEM_W = 44;
-const COLOR_DRUM_W = 44; // window = 1 item wide, others hidden
-const colorDrumInner = document.getElementById('color-drum-inner');
+const colorDrumInner = document.getElementById(‘color-drum-inner’);
 const colorDotStyles = [
-  'radial-gradient(circle at 35% 35%, #ff9500, #cc2200)',
-  'radial-gradient(circle at 35% 35%, #cc44ff, #4400aa)',
-  'radial-gradient(circle at 35% 35%, #00cfff, #003899)',
-  'radial-gradient(circle at 35% 35%, #00ff99, #006633)',
-  'radial-gradient(circle at 35% 35%, #ffe566, #cc8800)',
-  'radial-gradient(circle at 35% 35%, #ffffff, #556677)',
+‘radial-gradient(circle at 35% 35%,#ff9500,#cc2200)’,
+‘radial-gradient(circle at 35% 35%,#cc44ff,#4400aa)’,
+‘radial-gradient(circle at 35% 35%,#00cfff,#003899)’,
+‘radial-gradient(circle at 35% 35%,#00ff99,#006633)’,
+‘radial-gradient(circle at 35% 35%,#ffe566,#cc8800)’,
+‘radial-gradient(circle at 35% 35%,#ffffff,#556677)’,
 ];
-const colorItems = colorDotStyles.map((bg, i) => {
-  const item = document.createElement('div');
-  item.className = 'color-item' + (i === 0 ? ' active' : '');
-  const dot = document.createElement('div');
-  dot.className = 'color-dot';
-  dot.style.background = bg;
-  item.appendChild(dot);
-  colorDrumInner.appendChild(item);
-  return item;
+const colorItems = colorDotStyles.map((bg,i) => {
+const item = document.createElement(‘div’); item.className=‘color-item’;
+const dot = document.createElement(‘div’); dot.className=‘color-dot’; dot.style.background=bg;
+item.appendChild(dot); colorDrumInner.appendChild(item); return item;
 });
 
 function updateColorDrum(idx) {
-  const offset = (COLOR_DRUM_W / 2) - (idx * COLOR_ITEM_W + COLOR_ITEM_W / 2);
-  colorDrumInner.style.transition = 'transform 0.18s cubic-bezier(0.25,0.8,0.25,1)';
-  colorDrumInner.style.transform = `translateX(${offset}px)`;
-  colorItems.forEach((it, i) => it.classList.toggle('active', i === idx));
+const offset = 22 - (idx * 44 + 22);
+colorDrumInner.style.transition=‘transform 0.18s cubic-bezier(0.25,0.8,0.25,1)’;
+colorDrumInner.style.transform=`translateX(${offset}px)`;
+colorItems.forEach((it,i) => it.classList.toggle(‘active’, i===idx));
 }
-updateColorDrum(currentPalette);
+updateColorDrum(0);
 
-// Interaction
-const colorDrumEl = document.getElementById('color-drum');
-let cdStartX = 0, cdStartIdx = 0, cdDragging = false;
-function cdClamp(v) { return Math.max(0, Math.min(PALETTES.length - 1, v)); }
+const colorDrumEl = document.getElementById(‘color-drum’);
+let cdStartX=0, cdStartIdx=0, cdDragging=false;
+const cdClamp = v => Math.max(0, Math.min(PALETTES.length-1, v));
 
-colorDrumEl.addEventListener('touchstart', e => {
-  cdStartX   = e.touches[0].clientX;
-  cdStartIdx = currentPalette;
-  cdDragging = true;
-  colorDrumInner.style.transition = 'none';
-}, {passive: true});
+colorDrumEl.addEventListener(‘touchstart’,e=>{
+cdStartX=e.touches[0].clientX; cdStartIdx=currentPalette; cdDragging=true;
+colorDrumInner.style.transition=‘none’;
+},{passive:true});
+colorDrumEl.addEventListener(‘touchmove’,e=>{
+if(!cdDragging)return;
+const dx=e.touches[0].clientX-cdStartX;
+colorDrumInner.style.transform=`translateX(${22-(cdStartIdx*44+22)+dx}px)`;
+const newIdx=cdClamp(cdStartIdx-Math.round(dx/44));
+if(newIdx!==currentPalette){currentPalette=newIdx; updateGlowColor(); colorItems.forEach((it,i)=>it.classList.toggle(‘active’,i===newIdx));}
+},{passive:true});
+colorDrumEl.addEventListener(‘touchend’,()=>{cdDragging=false;updateColorDrum(currentPalette);});
+colorDrumEl.addEventListener(‘wheel’,e=>{
+e.preventDefault();
+const newIdx=cdClamp(currentPalette+(e.deltaY>0?1:-1));
+if(newIdx!==currentPalette){currentPalette=newIdx; updateColorDrum(currentPalette); updateGlowColor();}
+},{passive:false});
 
-colorDrumEl.addEventListener('touchmove', e => {
-  if (!cdDragging) return;
-  const dx = e.touches[0].clientX - cdStartX;
-  const base = (COLOR_DRUM_W / 2) - (cdStartIdx * COLOR_ITEM_W + COLOR_ITEM_W / 2);
-  colorDrumInner.style.transform = `translateX(${base + dx}px)`;
-  const newIdx = cdClamp(cdStartIdx - Math.round(dx / COLOR_ITEM_W));
-  if (newIdx !== currentPalette) {
-    currentPalette = newIdx;
-    if (navigator.vibrate) navigator.vibrate(10);
-    colorItems.forEach((it, i) => it.classList.toggle('active', i === newIdx));
-    updateGlowColor();
-  }
-}, {passive: true});
-
-colorDrumEl.addEventListener('touchend', () => {
-  cdDragging = false;
-  updateColorDrum(currentPalette);
-});
-
-colorDrumEl.addEventListener('wheel', e => {
-  e.preventDefault();
-  const newIdx = cdClamp(currentPalette + (e.deltaY > 0 ? 1 : -1));
-  if (newIdx !== currentPalette) {
-    currentPalette = newIdx;
-    updateColorDrum(currentPalette);
-    updateGlowColor();
-  }
-}, {passive: false});
-
-let glowColor = '255,140,0';
-function updateGlowColor() {
-  const p = PALETTES[currentPalette];
-  glowColor = `${p.top[0]},${p.top[1]},${p.top[2]}`;
-  const root = document.documentElement;
-  root.style.setProperty('--c1', glowColor);
-  root.style.setProperty('--c2', `${p.bot[0]},${p.bot[1]},${p.bot[2]}`);
+let glowColor=‘255,140,0’;
+function updateGlowColor(){
+const p=PALETTES[currentPalette];
+glowColor=`${p.top[0]},${p.top[1]},${p.top[2]}`;
+document.documentElement.style.setProperty(’–c1’,glowColor);
+document.documentElement.style.setProperty(’–c2’,`${p.bot[0]},${p.bot[1]},${p.bot[2]}`);
 }
 updateGlowColor();
 
-function getLavaColor(oy) {
-  const t = oy / OH; // 0=top, 1=bottom
-  const p = PALETTES[currentPalette];
-  return [
-    Math.round(p.top[0] + (p.bot[0] - p.top[0]) * t),
-    Math.round(p.top[1] + (p.bot[1] - p.top[1]) * t),
-    Math.round(p.top[2] + (p.bot[2] - p.top[2]) * t),
-  ];
+function getLavaColor(oy){
+const t=oy/OH; const p=PALETTES[currentPalette];
+return [
+Math.round(p.top[0]+(p.bot[0]-p.top[0])*t),
+Math.round(p.top[1]+(p.bot[1]-p.top[1])*t),
+Math.round(p.top[2]+(p.bot[2]-p.top[2])*t),
+];
 }
 
+// ─── RENDER ──────────────────────────────────────────────────────
 function renderMetaballs(t) {
-  const imgData = octx.createImageData(OW, OH);
-  const data = imgData.data;
-  const THRESHOLD = 1.0;
+const imgData = octx.createImageData(OW,OH);
+const data = imgData.data;
+const hasLava = appMode === ‘timer’;
+const lavaCenterY = OH*(1-lavaLevel*0.33)+OH*0.55;
+const lavaR = OH*0.6+OH*lavaLevel*0.4;
+const waveAmp = OH*0.012;
 
-  const lavaCenterY = OH * (1 - lavaLevel * 0.33) + OH * 0.55;
-  const lavaR = OH * 0.6 + OH * lavaLevel * 0.4;
-  const waveAmp = OH * 0.012;
-
-  for (let py = 0; py < OH; py++) {
-    for (let px = 0; px < OW; px++) {
-      const wave = Math.sin(px * 0.08 + t * 0.8) * waveAmp
-                 + Math.sin(px * 0.15 + t * 1.3) * waveAmp * 0.5;
-
-      const dy = (py + wave) - lavaCenterY;
-      const dx = px - OW / 2;
-      const dist2 = dx*dx + dy*dy;
-      let potential = (lavaR * lavaR) / (dist2 || 0.001);
-
-      for (const b of blobs) {
-        const bdx = px - b.x;
-        const bdy = py - b.y;
-        const bd2 = bdx*bdx + bdy*bdy;
-        potential += (b.r * b.r) / (bd2 || 0.001);
-      }
-
-      if (potential >= THRESHOLD) {
-        const [r, g, bb] = getLavaColor(py);
-        const i = (py * OW + px) * 4;
-        const boost = Math.min(1, (potential - THRESHOLD) * 2);
-        data[i]   = Math.min(255, r + boost * 40);
-        data[i+1] = Math.min(255, g + boost * 30);
-        data[i+2] = bb;
-        data[i+3] = 255;
-      }
-    }
-  }
-  octx.putImageData(imgData, 0, 0);
+for(let py=0;py<OH;py++){
+for(let px=0;px<OW;px++){
+const wave = Math.sin(px*0.08+t*0.8)*waveAmp + Math.sin(px*0.15+t*1.3)*waveAmp*0.5;
+let potential = 0;
+if(hasLava){
+const dy=(py+wave)-lavaCenterY, dx=px-OW/2;
+potential += (lavaR*lavaR)/((dx*dx+dy*dy)||0.001);
+}
+for(const b of blobs){
+const bdx=px-b.x, bdy=py-b.y;
+potential += (b.r*b.r)/((bdx*bdx+bdy*bdy)||0.001);
+}
+if(potential>=1.0){
+const [r,g,bb]=getLavaColor(py);
+const i=(py*OW+px)*4;
+const boost=Math.min(1,(potential-1)*2);
+data[i]=Math.min(255,r+boost*40); data[i+1]=Math.min(255,g+boost*30);
+data[i+2]=bb; data[i+3]=255;
+}
+}
+}
+octx.putImageData(imgData,0,0);
 }
 
-function drawFrame(now) {
-  const t = now / 1000;
-  spawnBlob(now);
-  blobs = blobs.filter(b => b.update());
-  renderMetaballs(t);
-
-  ctx.clearRect(0, 0, W, H);
-
-  const glowY = H * (1 - lavaLevel * 0.33);
-  const glow = ctx.createRadialGradient(W/2, glowY, 0, W/2, glowY + H*0.2, H*0.7);
-  glow.addColorStop(0, `rgba(${glowColor},${0.09 * lavaLevel})`);
-  glow.addColorStop(1, 'transparent');
-  ctx.fillStyle = glow;
-  ctx.fillRect(0, 0, W, H);
-
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(offscreen, 0, 0, W, H);
-
-  requestAnimationFrame(drawFrame);
+function drawFrame(now){
+const t=now/1000;
+spawnBlob(now);
+blobs=blobs.filter(b=>b.update());
+renderMetaballs(t);
+ctx.clearRect(0,0,W,H);
+if(appMode===‘timer’&&lavaLevel>0){
+const glowY=H*(1-lavaLevel*0.33);
+const glow=ctx.createRadialGradient(W/2,glowY,0,W/2,glowY+H*0.2,H*0.7);
+glow.addColorStop(0,`rgba(${glowColor},${0.09*lavaLevel})`);
+glow.addColorStop(1,‘transparent’);
+ctx.fillStyle=glow; ctx.fillRect(0,0,W,H);
+}
+ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality=‘high’;
+ctx.drawImage(offscreen,0,0,W,H);
+requestAnimationFrame(drawFrame);
 }
 
-// ─── TIMER ───────────────────────────────────────────────────────
-const setupEl   = document.getElementById('setup');
-const runningEl = document.getElementById('running');
-const doneEl    = document.getElementById('done');
-const timeDisp  = document.getElementById('time-display');
+// ─── TIMER LOGIC ─────────────────────────────────────────────────
+const setupEl  = document.getElementById(‘setup’);
+const runningEl= document.getElementById(‘running’);
+const doneEl   = document.getElementById(‘done’);
+const timeDisp = document.getElementById(‘time-display’);
 
-function fmt(s) {
-  const h  = Math.floor(s / 3600);
-  const m  = Math.floor((s % 3600) / 60);
-  const sc = s % 60;
-  if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`;
-  return `${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`;
+function fmt(s){
+const h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sc=s%60;
+if(h>0) return `${h}:${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`;
+return `${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`;
 }
 
-function show(el) {
-  [setupEl, runningEl, doneEl].forEach(e => e.style.display = 'none');
-  el.style.display = 'flex';
+function show(el){
+[setupEl,runningEl,doneEl].forEach(e=>e.style.display=‘none’);
+el.style.display=‘flex’;
 }
 
-document.getElementById('btn-start').addEventListener('click', () => {
-  const t = selH * 3600 + selM * 60 + selS;
-  if (t === 0) return;
-  totalTime = t;
-  remaining = t;
-  lavaLevel = 1.0;
-  blobs = [];
-  running = true;
-  startTs = performance.now();
-  timeDisp.textContent = fmt(remaining);
-  show(runningEl);
-  tick();
+document.getElementById(‘btn-start’).addEventListener(‘click’,()=>{
+blobs=[];
+running=true;
+startTs=performance.now();
+
+if(appMode===‘timer’){
+const t=selH*3600+selM*60+selS;
+if(t===0)return;
+totalTime=t; remaining=t; lavaLevel=1.0;
+timeDisp.textContent=fmt(remaining);
+timeLabel.textContent=‘restant’;
+show(runningEl);
+tickTimer();
+} else {
+lavaLevel=0;
+chronoElapsed=0;
+timeDisp.textContent=‘00:00’;
+timeLabel.textContent=‘écoulé’;
+show(runningEl);
+tickChrono();
+}
 });
 
-function tick() {
-  if (!running) return;
-  const elapsed = (performance.now() - startTs) / 1000;
-  const elapsedFloored = Math.floor(elapsed);
-  remaining = Math.max(0, totalTime - elapsedFloored);
-  // lavaLevel uses precise elapsed (not floored) for smooth animation
-  lavaLevel = Math.max(0, (totalTime - elapsed) / totalTime);
-  timeDisp.textContent = fmt(remaining);
-  if (remaining === 0) {
-    running = false;
-    lavaLevel = 0;
-    setTimeout(() => show(doneEl), 600);
-    return;
-  }
-  requestAnimationFrame(tick);
+function tickTimer(){
+if(!running||appMode!==‘timer’)return;
+const el=(performance.now()-startTs)/1000;
+remaining=Math.max(0,totalTime-Math.floor(el));
+lavaLevel=Math.max(0,(totalTime-el)/totalTime);
+timeDisp.textContent=fmt(remaining);
+if(remaining===0){
+running=false; lavaLevel=0;
+setTimeout(()=>show(doneEl),600);
+return;
+}
+requestAnimationFrame(tickTimer);
 }
 
-document.getElementById('btn-stop').addEventListener('click', () => {
-  running = false;
-  lavaLevel = 1.0;
-  blobs = [];
-  show(setupEl);
+function tickChrono(){
+if(!running||appMode!==‘chrono’)return;
+chronoElapsed=Math.floor((performance.now()-startTs)/1000);
+timeDisp.textContent=fmt(chronoElapsed);
+requestAnimationFrame(tickChrono);
+}
+
+document.getElementById(‘btn-stop’).addEventListener(‘click’,()=>{
+running=false; lavaLevel=1.0; blobs=[];
+show(setupEl);
 });
 
-document.getElementById('btn-reset').addEventListener('click', () => {
-  lavaLevel = 1.0;
-  blobs = [];
-  show(setupEl);
+document.getElementById(‘btn-reset’).addEventListener(‘click’,()=>{
+lavaLevel=1.0; blobs=[];
+show(setupEl);
 });
 
 requestAnimationFrame(drawFrame);
